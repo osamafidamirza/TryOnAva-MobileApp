@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RootState } from '../store';
+import { setGender, setAge, setStyles } from '../store/onboardingSlice';
+import { setCredentials } from '../store/authSlice';
 import SplashScreen from '../screens/onboarding/SplashScreen';
-import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
 import GenderScreen from '../screens/onboarding/GenderScreen';
 import AgeScreen from '../screens/onboarding/AgeScreen';
 import StyleScreen from '../screens/onboarding/StyleScreen';
@@ -8,58 +12,46 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import SignUpScreen from '../screens/auth/SignUpScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import OTPScreen from '../screens/auth/OTPScreen';
+import HomeScreen from '../screens/main/HomeScreen';
 
 type Screen =
   | 'splash'
-  | 'onboarding'
-  | 'gender'
-  | 'age'
-  | 'style'
   | 'login'
   | 'signup'
   | 'forgot'
-  | 'otp';
+  | 'otp'
+  | 'gender'
+  | 'age'
+  | 'style'
+  | 'home';
 
 export default function AppNavigator() {
+  const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
   const [screen, setScreen] = useState<Screen>('splash');
-  const [gender, setGender] = useState<'male' | 'female'>('male');
   const [signupEmail, setSignupEmail] = useState('');
+
+  const handleSplashFinish = async () => {
+    const token = await AsyncStorage.getItem('accessToken');
+    setScreen(token ? 'home' : 'login');
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && screen === 'login') setScreen('home');
+  }, [isAuthenticated]);
 
   switch (screen) {
     case 'splash':
-      return <SplashScreen onFinish={() => setScreen('onboarding')} />;
-
-    case 'onboarding':
-      return <OnboardingScreen onNext={() => setScreen('gender')} />;
-
-    case 'gender':
-      return (
-        <GenderScreen
-          onNext={g => { setGender(g); setScreen('age'); }}
-          onBack={() => setScreen('onboarding')}
-        />
-      );
-
-    case 'age':
-      return (
-        <AgeScreen
-          onNext={() => setScreen('style')}
-          onBack={() => setScreen('gender')}
-        />
-      );
-
-    case 'style':
-      return (
-        <StyleScreen
-          onGetStarted={() => setScreen('login')}
-          onBack={() => setScreen('age')}
-        />
-      );
+      return <SplashScreen onFinish={handleSplashFinish} />;
 
     case 'login':
       return (
         <LoginScreen
-          onLogin={() => console.log('logged in')}
+          onLogin={data => {
+            dispatch(setCredentials(data));
+            setScreen('home');
+          }}
           onForgotPassword={() => setScreen('forgot')}
           onSignUp={() => setScreen('signup')}
         />
@@ -68,7 +60,10 @@ export default function AppNavigator() {
     case 'signup':
       return (
         <SignUpScreen
-          onRegister={data => { setSignupEmail(data.email); setScreen('otp'); }}
+          onRegister={email => {
+            setSignupEmail(email);
+            setScreen('otp');
+          }}
           onLogin={() => setScreen('login')}
         />
       );
@@ -85,12 +80,48 @@ export default function AppNavigator() {
       return (
         <OTPScreen
           email={signupEmail}
-          onVerified={() => setScreen('login')}
+          onVerified={() => setScreen('gender')}
           onBack={() => setScreen('signup')}
         />
       );
 
+    case 'gender':
+      return (
+        <GenderScreen
+          onNext={g => {
+            dispatch(setGender(g));
+            setScreen('age');
+          }}
+          onBack={() => setScreen('otp')}
+        />
+      );
+
+    case 'age':
+      return (
+        <AgeScreen
+          onNext={age => {
+            dispatch(setAge(age));
+            setScreen('style');
+          }}
+          onBack={() => setScreen('gender')}
+        />
+      );
+
+    case 'style':
+      return (
+        <StyleScreen
+          onGetStarted={styles => {
+            dispatch(setStyles(styles));
+            setScreen('home');
+          }}
+          onBack={() => setScreen('age')}
+        />
+      );
+
+    case 'home':
+      return <HomeScreen />;
+
     default:
-      return <SplashScreen onFinish={() => setScreen('onboarding')} />;
+      return <SplashScreen onFinish={handleSplashFinish} />;
   }
 }

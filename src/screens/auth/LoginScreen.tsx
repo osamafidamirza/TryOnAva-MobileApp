@@ -9,13 +9,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMutation } from '@tanstack/react-query';
+import { authApi } from '../../api/auth';
 import { colors, typography, spacing } from '../../theme';
 
 const { width } = Dimensions.get('window');
 
 interface Props {
-  onLogin: () => void;
+  onLogin: (data: any) => void;
   onForgotPassword: () => void;
   onSignUp: () => void;
 }
@@ -25,6 +30,19 @@ export default function LoginScreen({ onLogin, onForgotPassword, onSignUp }: Pro
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const loginMutation = useMutation({
+    mutationFn: () => authApi.login({ email, password }),
+    onSuccess: async res => {
+      const { user, tokens } = res.data;
+      await AsyncStorage.setItem('accessToken', tokens.access.token);
+      await AsyncStorage.setItem('refreshToken', tokens.refresh.token);
+      onLogin({ user, tokens });
+    },
+    onError: (err: any) => {
+      Alert.alert('Login Failed', err.response?.data?.message || 'Invalid credentials');
+    },
+  });
 
   return (
     <KeyboardAvoidingView
@@ -65,17 +83,13 @@ export default function LoginScreen({ onLogin, onForgotPassword, onSignUp }: Pro
               placeholderTextColor={colors.subtext}
               secureTextEntry={!showPassword}
             />
-            <TouchableOpacity
-              style={styles.eyeBtn}
-              onPress={() => setShowPassword(!showPassword)}>
+            <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowPassword(!showPassword)}>
               <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁'}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.row}>
-            <TouchableOpacity
-              style={styles.checkRow}
-              onPress={() => setRememberMe(!rememberMe)}>
+            <TouchableOpacity style={styles.checkRow} onPress={() => setRememberMe(!rememberMe)}>
               <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
                 {rememberMe && <Text style={styles.checkmark}>✓</Text>}
               </View>
@@ -86,8 +100,14 @@ export default function LoginScreen({ onLogin, onForgotPassword, onSignUp }: Pro
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={onLogin} activeOpacity={0.8}>
-            <Text style={styles.buttonText}>Sign In</Text>
+          <TouchableOpacity
+            style={[styles.button, loginMutation.isPending && styles.buttonDisabled]}
+            onPress={() => loginMutation.mutate()}
+            disabled={loginMutation.isPending}
+            activeOpacity={0.8}>
+            {loginMutation.isPending
+              ? <ActivityIndicator color={colors.background} />
+              : <Text style={styles.buttonText}>Sign In</Text>}
           </TouchableOpacity>
 
           <View style={styles.dividerRow}>
@@ -118,28 +138,12 @@ export default function LoginScreen({ onLogin, onForgotPassword, onSignUp }: Pro
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flexGrow: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  scroll: { flexGrow: 1, paddingHorizontal: spacing.lg, paddingTop: 60, paddingBottom: 40 },
+  logoContainer: { alignItems: 'center', marginBottom: spacing.xl },
   iconCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#1A3A5C',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
+    width: 70, height: 70, borderRadius: 35,
+    backgroundColor: '#1A3A5C', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm,
   },
   iconText: { fontSize: 28, color: colors.primary },
   brand: { fontSize: 22, fontWeight: '700', marginBottom: spacing.sm },
@@ -147,84 +151,42 @@ const styles = StyleSheet.create({
   brandGreen: { color: colors.accent },
   screenTitle: { ...typography.h1, color: colors.text, fontWeight: '700' },
   form: { width: '100%' },
-  label: {
-    ...typography.p2,
-    color: colors.subtext,
-    marginBottom: spacing.xs,
-    marginTop: spacing.md,
-  },
+  label: { ...typography.p2, color: colors.subtext, marginBottom: spacing.xs, marginTop: spacing.md },
   input: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: 12,
-    height: 52,
-    paddingHorizontal: spacing.md,
-    color: colors.text,
-    ...typography.p1,
-    borderWidth: 1,
-    borderColor: colors.stroke,
+    backgroundColor: colors.cardSecondary, borderRadius: 12, height: 52,
+    paddingHorizontal: spacing.md, color: colors.text, ...typography.p1,
+    borderWidth: 1, borderColor: colors.stroke,
   },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  inputRow: { flexDirection: 'row', alignItems: 'center' },
   inputFlex: { flex: 1 },
-  eyeBtn: {
-    position: 'absolute',
-    right: spacing.md,
-  },
+  eyeBtn: { position: 'absolute', right: spacing.md },
   eyeText: { fontSize: 18 },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginTop: spacing.md, marginBottom: spacing.lg,
   },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: colors.subtext,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 18, height: 18, borderRadius: 4, borderWidth: 1,
+    borderColor: colors.subtext, alignItems: 'center', justifyContent: 'center',
   },
   checkboxChecked: { backgroundColor: colors.primary, borderColor: colors.primary },
   checkmark: { color: colors.background, fontSize: 12, fontWeight: '700' },
   rememberText: { ...typography.p2, color: colors.subtext },
   forgotText: { ...typography.p2, color: colors.primary },
   button: {
-    backgroundColor: colors.primary,
-    height: 52,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: colors.primary, height: 52, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
   },
+  buttonDisabled: { opacity: 0.6 },
   buttonText: { ...typography.p1, color: colors.background, fontWeight: '700' },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing.lg,
-    gap: spacing.sm,
-  },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: spacing.lg, gap: spacing.sm },
   divider: { flex: 1, height: 1, backgroundColor: colors.stroke },
   dividerText: { ...typography.p2, color: colors.subtext },
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.lg,
-    marginBottom: spacing.xl,
-  },
+  socialRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.lg, marginBottom: spacing.xl },
   socialBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.cardSecondary,
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 52, height: 52, borderRadius: 26, backgroundColor: colors.cardSecondary,
+    borderWidth: 1, borderColor: colors.stroke, alignItems: 'center', justifyContent: 'center',
   },
   socialIcon: { fontSize: 22, color: colors.text, fontWeight: '700' },
   signupRow: { flexDirection: 'row', justifyContent: 'center' },
