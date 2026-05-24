@@ -6,7 +6,10 @@ import {
   TouchableOpacity,
   TextInput,
   Dimensions,
+  Alert,
 } from 'react-native';
+
+const DEV_OTP = '786786';
 import { colors, typography, spacing } from '../../theme';
 
 const { width } = Dimensions.get('window');
@@ -31,8 +34,18 @@ export default function OTPScreen({ email, onVerified, onBack }: Props) {
       inputs.current[index + 1]?.focus();
     }
     if (newOtp.every(d => d !== '')) {
+      verifyOtp(newOtp.join(''));
+    }
+  };
+
+  const verifyOtp = (code: string) => {
+    if (code === DEV_OTP) {
       setVerified(true);
       setTimeout(() => onVerified(), 1000);
+    } else {
+      Alert.alert('Invalid OTP', 'Please enter the correct code');
+      setOtp(Array(OTP_LENGTH).fill(''));
+      inputs.current[0]?.focus();
     }
   };
 
@@ -89,10 +102,7 @@ export default function OTPScreen({ email, onVerified, onBack }: Props) {
         ))}
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={() => {
-        setVerified(true);
-        setTimeout(() => onVerified(), 1000);
-      }} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.button} onPress={() => verifyOtp(otp.join(''))} activeOpacity={0.8}>
         <Text style={styles.buttonText}>Confirm</Text>
       </TouchableOpacity>
     </View>
