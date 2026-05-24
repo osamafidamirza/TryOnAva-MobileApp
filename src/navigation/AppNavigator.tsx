@@ -38,7 +38,11 @@ export default function AppNavigator() {
   };
 
   useEffect(() => {
-    if (isAuthenticated && screen === 'login') setScreen('home');
+    if (isAuthenticated) {
+      setScreen('home');
+    } else if (screen === 'home') {
+      setScreen('login');
+    }
   }, [isAuthenticated]);
 
   switch (screen) {
@@ -119,7 +123,7 @@ export default function AppNavigator() {
       );
 
     case 'home':
-      return <HomeScreen />;
+      return <HomeScreen onLogout={() => setScreen('login')} />;
 
     default:
       return <SplashScreen onFinish={handleSplashFinish} />;
