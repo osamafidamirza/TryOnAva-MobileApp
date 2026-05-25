@@ -41,7 +41,20 @@ export default function AppNavigator() {
 
   const handleSplashFinish = async () => {
     const token = await AsyncStorage.getItem('accessToken');
-    setScreen(token ? 'home' : 'login');
+    if (token) {
+      const userJson = await AsyncStorage.getItem('user');
+      if (userJson) {
+        const user = JSON.parse(userJson);
+        const tokens = {
+          access: { token },
+          refresh: { token: (await AsyncStorage.getItem('refreshToken')) ?? '' },
+        };
+        dispatch(setCredentials({ user, tokens }));
+      }
+      setScreen('home');
+    } else {
+      setScreen('login');
+    }
   };
 
   useEffect(() => {

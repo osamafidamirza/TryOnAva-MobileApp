@@ -37,6 +37,7 @@ export default function LoginScreen({ onLogin, onForgotPassword, onSignUp }: Pro
       const { user, tokens } = res.data;
       await AsyncStorage.setItem('accessToken', tokens.access.token);
       await AsyncStorage.setItem('refreshToken', tokens.refresh.token);
+      await AsyncStorage.setItem('user', JSON.stringify(user));
       onLogin({ user, tokens });
     },
     onError: (err: any) => {

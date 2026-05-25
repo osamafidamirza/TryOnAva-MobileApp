@@ -30,6 +30,7 @@ export default function ProfileScreen({ onLogout }: Props) {
   const handleLogout = async () => {
     await AsyncStorage.removeItem('accessToken');
     await AsyncStorage.removeItem('refreshToken');
+    await AsyncStorage.removeItem('user');
     dispatch(logout());
     onLogout();
   };
