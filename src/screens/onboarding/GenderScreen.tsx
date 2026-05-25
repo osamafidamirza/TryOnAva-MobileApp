@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
+  View, Text, StyleSheet, TouchableOpacity, Dimensions, Image,
 } from 'react-native';
 import { colors, typography, spacing } from '../../theme';
 
 const { width } = Dimensions.get('window');
+
+const appLogo = require('../../assets/images/app-logo.png');
+const maleAvatar = require('../../assets/images/male-avatar.png');
+const femaleAvatar = require('../../assets/images/female-avatar.png');
 
 interface Props {
   onNext: (gender: 'male' | 'female') => void;
@@ -25,9 +25,7 @@ export default function GenderScreen({ onNext, onBack }: Props) {
       </TouchableOpacity>
 
       <View style={styles.logoContainer}>
-        <View style={styles.iconCircle}>
-          <Text style={styles.iconText}>⊕</Text>
-        </View>
+        <Image source={appLogo} style={styles.logo} resizeMode="contain" />
         <Text style={styles.brand}>
           <Text style={styles.brandCyan}>Try</Text>
           <Text style={styles.brandGreen}>On</Text>
@@ -43,7 +41,7 @@ export default function GenderScreen({ onNext, onBack }: Props) {
           style={[styles.option, selected === 'male' && styles.optionSelected]}
           onPress={() => setSelected('male')}
           activeOpacity={0.8}>
-          <Text style={styles.optionIcon}>👤</Text>
+          <Image source={maleAvatar} style={styles.avatarIcon} resizeMode="contain" />
           <Text style={styles.optionText}>Male</Text>
         </TouchableOpacity>
 
@@ -51,7 +49,7 @@ export default function GenderScreen({ onNext, onBack }: Props) {
           style={[styles.option, selected === 'female' && styles.optionSelected]}
           onPress={() => setSelected('female')}
           activeOpacity={0.8}>
-          <Text style={styles.optionIcon}>👤</Text>
+          <Image source={femaleAvatar} style={styles.avatarIcon} resizeMode="contain" />
           <Text style={styles.optionText}>Female</Text>
         </TouchableOpacity>
       </View>
@@ -69,99 +67,32 @@ export default function GenderScreen({ onNext, onBack }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: 60,
+    flex: 1, backgroundColor: colors.background,
+    alignItems: 'center', paddingHorizontal: spacing.lg, paddingTop: 60,
   },
-  back: {
-    position: 'absolute',
-    top: 56,
-    left: spacing.lg,
-  },
-  backText: {
-    color: colors.text,
-    fontSize: 24,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-    marginTop: spacing.lg,
-  },
-  iconCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#1A3A5C',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  iconText: {
-    fontSize: 28,
-    color: colors.primary,
-  },
-  brand: {
-    fontSize: 22,
-    fontWeight: '700',
-  },
+  back: { position: 'absolute', top: 56, left: spacing.lg },
+  backText: { color: colors.text, fontSize: 24 },
+  logoContainer: { alignItems: 'center', marginBottom: spacing.lg, marginTop: spacing.md },
+  logo: { width: 60, height: 60, marginBottom: spacing.xs },
+  brand: { fontSize: 20, fontWeight: '700' },
   brandCyan: { color: colors.primary },
   brandGreen: { color: colors.accent },
-  title: {
-    ...typography.h2,
-    color: colors.text,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    ...typography.p2,
-    color: colors.subtext,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
-  optionsContainer: {
-    width: '100%',
-    gap: spacing.md,
-  },
+  title: { ...typography.h2, color: colors.text, fontWeight: '700', marginBottom: spacing.xs },
+  subtitle: { ...typography.p2, color: colors.subtext, textAlign: 'center', marginBottom: spacing.xl },
+  optionsContainer: { width: '100%', gap: spacing.md, flex: 1 },
   option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.cardSecondary,
-    borderRadius: 12,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    gap: spacing.md,
+    width: '100%', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.cardSecondary, borderRadius: 16,
+    paddingVertical: spacing.lg, borderWidth: 1, borderColor: colors.stroke, flex: 1,
   },
-  optionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: '#0D2137',
-  },
-  optionIcon: {
-    fontSize: 24,
-  },
-  optionText: {
-    ...typography.p1,
-    color: colors.text,
-    fontWeight: '600',
-  },
+  optionSelected: { borderColor: colors.primary, backgroundColor: '#0A1F33' },
+  avatarIcon: { width: 48, height: 48, marginBottom: spacing.sm },
+  optionText: { ...typography.p1, color: colors.text, fontWeight: '600' },
   button: {
-    backgroundColor: colors.primary,
-    width: width - spacing.lg * 2,
-    height: 52,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    bottom: 60,
+    backgroundColor: colors.primary, width: width - spacing.lg * 2,
+    height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+    marginTop: spacing.xl, marginBottom: 60,
   },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    ...typography.p1,
-    color: colors.background,
-    fontWeight: '700',
-  },
+  buttonDisabled: { opacity: 0.5 },
+  buttonText: { ...typography.p1, color: colors.background, fontWeight: '700' },
 });

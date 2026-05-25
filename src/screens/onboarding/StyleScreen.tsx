@@ -1,14 +1,26 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
+  View, Text, StyleSheet, TouchableOpacity, Dimensions, Image, ScrollView,
 } from 'react-native';
 import { colors, typography, spacing } from '../../theme';
 
 const { width } = Dimensions.get('window');
+const CARD_SIZE = (width - spacing.lg * 2 - spacing.md) / 2;
+
+const STYLE_IMAGES: Record<string, Record<string, any>> = {
+  male: {
+    street: require('../../assets/images/male-street.png'),
+    sports: require('../../assets/images/male-sports.png'),
+    casual: require('../../assets/images/male-casual.png'),
+    formal: require('../../assets/images/male-formal.png'),
+  },
+  female: {
+    street: require('../../assets/images/female-street.png'),
+    sports: require('../../assets/images/female-sports.png'),
+    casual: require('../../assets/images/female-casual.png'),
+    formal: require('../../assets/images/female-formal.png'),
+  },
+};
 
 const STYLES = [
   { id: 'street', label: 'Street Style' },
@@ -18,11 +30,12 @@ const STYLES = [
 ];
 
 interface Props {
+  gender: 'male' | 'female';
   onGetStarted: (styles: string[]) => void;
   onBack: () => void;
 }
 
-export default function StyleScreen({ onGetStarted, onBack }: Props) {
+export default function StyleScreen({ gender, onGetStarted, onBack }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
 
   const toggle = (id: string) => {
@@ -31,13 +44,15 @@ export default function StyleScreen({ onGetStarted, onBack }: Props) {
     );
   };
 
+  const images = STYLE_IMAGES[gender];
+
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.back} onPress={onBack}>
         <Text style={styles.backText}>←</Text>
       </TouchableOpacity>
 
-      <Text style={styles.title}>Choose Your Style</Text>
+      <Text style={styles.title}>Choose Style</Text>
       <Text style={styles.subtitle}>Select the styles you like to personalize your experience</Text>
 
       <View style={styles.grid}>
@@ -46,13 +61,11 @@ export default function StyleScreen({ onGetStarted, onBack }: Props) {
           return (
             <TouchableOpacity
               key={style.id}
-              style={[styles.styleCard, isSelected && styles.styleCardSelected]}
+              style={[styles.card, isSelected && styles.cardSelected]}
               onPress={() => toggle(style.id)}
               activeOpacity={0.8}>
-              <View style={styles.imagePlaceholder}>
-                <Text style={styles.placeholderIcon}>👔</Text>
-              </View>
-              <Text style={styles.styleLabel}>{style.label}</Text>
+              <Image source={images[style.id]} style={styles.cardImage} resizeMode="cover" />
+              <Text style={styles.cardLabel}>{style.label}</Text>
               {isSelected && (
                 <View style={styles.checkBadge}>
                   <Text style={styles.checkText}>✓</Text>
@@ -68,7 +81,7 @@ export default function StyleScreen({ onGetStarted, onBack }: Props) {
         onPress={() => onGetStarted(selected)}
         activeOpacity={0.8}
         disabled={selected.length === 0}>
-        <Text style={styles.buttonText}>Get Started →</Text>
+        <Text style={styles.buttonText}>Get Started  →</Text>
       </TouchableOpacity>
     </View>
   );
@@ -76,101 +89,39 @@ export default function StyleScreen({ onGetStarted, onBack }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    paddingTop: 60,
-    paddingHorizontal: spacing.lg,
+    flex: 1, backgroundColor: colors.background,
+    alignItems: 'center', paddingTop: 60, paddingHorizontal: spacing.lg,
   },
-  back: {
-    position: 'absolute',
-    top: 56,
-    left: spacing.lg,
-  },
-  backText: {
-    color: colors.text,
-    fontSize: 24,
-  },
-  title: {
-    ...typography.h2,
-    color: colors.text,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
-    marginTop: spacing.lg,
-  },
-  subtitle: {
-    ...typography.p2,
-    color: colors.subtext,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
+  back: { position: 'absolute', top: 56, left: spacing.lg },
+  backText: { color: colors.text, fontSize: 24 },
+  title: { ...typography.h2, color: colors.text, fontWeight: '700', marginBottom: spacing.xs, marginTop: spacing.lg },
+  subtitle: { ...typography.p2, color: colors.subtext, textAlign: 'center', marginBottom: spacing.lg },
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-    justifyContent: 'center',
-    width: '100%',
+    flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md,
+    justifyContent: 'center', width: '100%', flex: 1,
   },
-  styleCard: {
-    width: (width - spacing.lg * 2 - spacing.md) / 2,
-    aspectRatio: 0.85,
-    borderRadius: 16,
-    backgroundColor: colors.cardSecondary,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'transparent',
+  card: {
+    width: CARD_SIZE, height: CARD_SIZE * 1.2,
+    borderRadius: 16, backgroundColor: colors.cardSecondary,
+    overflow: 'hidden', borderWidth: 2, borderColor: 'transparent',
   },
-  styleCardSelected: {
-    borderColor: colors.primary,
-  },
-  imagePlaceholder: {
-    flex: 1,
-    backgroundColor: '#1A2B3C',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderIcon: {
-    fontSize: 48,
-  },
-  styleLabel: {
-    ...typography.small,
-    color: colors.text,
-    textAlign: 'center',
-    padding: spacing.sm,
-    fontWeight: '600',
+  cardSelected: { borderColor: colors.primary },
+  cardImage: { width: '100%', flex: 1 },
+  cardLabel: {
+    ...typography.small, color: colors.text,
+    textAlign: 'center', paddingVertical: spacing.sm, fontWeight: '600',
   },
   checkBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: 'absolute', top: 8, right: 8,
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
   },
-  checkText: {
-    color: colors.background,
-    fontSize: 12,
-    fontWeight: '700',
-  },
+  checkText: { color: colors.background, fontSize: 12, fontWeight: '700' },
   button: {
-    backgroundColor: colors.primary,
-    width: width - spacing.lg * 2,
-    height: 52,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    bottom: 60,
+    backgroundColor: colors.primary, width: width - spacing.lg * 2,
+    height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+    marginTop: spacing.lg, marginBottom: 60,
   },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    ...typography.p1,
-    color: colors.background,
-    fontWeight: '700',
-  },
+  buttonDisabled: { opacity: 0.5 },
+  buttonText: { ...typography.p1, color: colors.background, fontWeight: '700' },
 });

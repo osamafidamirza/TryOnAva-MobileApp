@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
-  Dimensions, KeyboardAvoidingView, Platform, ScrollView,
-  ActivityIndicator, Alert,
+  KeyboardAvoidingView, Platform, ScrollView,
+  ActivityIndicator, Alert, Image,
 } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { authApi } from '../../api/auth';
 import { colors, typography, spacing } from '../../theme';
 
-const { width } = Dimensions.get('window');
+const appLogo = require('../../assets/images/app-logo.png');
 
 interface Props {
   onRegister: (email: string) => void;
@@ -44,9 +44,7 @@ export default function SignUpScreen({ onRegister, onLogin }: Props) {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.logoContainer}>
-          <View style={styles.iconCircle}>
-            <Text style={styles.iconText}>⊕</Text>
-          </View>
+          <Image source={appLogo} style={styles.logo} resizeMode="contain" />
           <Text style={styles.brand}>
             <Text style={styles.brandCyan}>Try</Text>
             <Text style={styles.brandGreen}>On</Text>
@@ -135,11 +133,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1, paddingHorizontal: spacing.lg, paddingTop: 60, paddingBottom: 40 },
   logoContainer: { alignItems: 'center', marginBottom: spacing.xl },
-  iconCircle: {
-    width: 70, height: 70, borderRadius: 35, backgroundColor: '#1A3A5C',
-    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm,
-  },
-  iconText: { fontSize: 28, color: colors.primary },
+  logo: { width: 80, height: 80, marginBottom: spacing.sm },
   brand: { fontSize: 22, fontWeight: '700', marginBottom: spacing.sm },
   brandCyan: { color: colors.primary },
   brandGreen: { color: colors.accent },

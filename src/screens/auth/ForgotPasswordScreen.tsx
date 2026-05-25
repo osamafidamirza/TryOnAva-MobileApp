@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
+  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Image,
 } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { authApi } from '../../api/auth';
 import { colors, typography, spacing } from '../../theme';
 
+const iconRecover = require('../../assets/images/icon-recover.png');
+const iconEmailSent = require('../../assets/images/icon-email-sent.png');
+
 interface Props {
   onBack: () => void;
-  onSent: () => void;
+  onSent: (email: string) => void;
 }
 
 export default function ForgotPasswordScreen({ onBack, onSent }: Props) {
@@ -20,7 +23,7 @@ export default function ForgotPasswordScreen({ onBack, onSent }: Props) {
     mutationFn: () => authApi.forgotPassword(email),
     onSuccess: () => {
       setSent(true);
-      setTimeout(() => onSent(), 2000);
+      setTimeout(() => onSent(email), 2000);
     },
     onError: (err: any) => {
       Alert.alert('Error', err.response?.data?.message || 'Something went wrong');
@@ -31,12 +34,10 @@ export default function ForgotPasswordScreen({ onBack, onSent }: Props) {
     return (
       <View style={styles.container}>
         <View style={styles.successContainer}>
-          <View style={styles.successIcon}>
-            <Text style={styles.successIconText}>✓</Text>
-          </View>
-          <Text style={styles.successTitle}>Email sent</Text>
+          <Image source={iconEmailSent} style={styles.iconLarge} resizeMode="contain" />
+          <Text style={styles.successTitle}>Email Sent</Text>
           <Text style={styles.successSubtitle}>
-            Check your email inbox for password reset instructions.
+            A 6-digit verification code has been sent to your email.
           </Text>
         </View>
       </View>
@@ -49,17 +50,10 @@ export default function ForgotPasswordScreen({ onBack, onSent }: Props) {
         <Text style={styles.backText}>←</Text>
       </TouchableOpacity>
 
-      <View style={styles.logoContainer}>
-        <View style={styles.iconCircle}>
-          <Text style={styles.iconText}>⊕</Text>
-        </View>
-        <Text style={styles.brand}>
-          <Text style={styles.brandCyan}>Try</Text>
-          <Text style={styles.brandGreen}>On</Text>
-          <Text style={styles.brandCyan}>Ava</Text>
-        </Text>
+      <View style={styles.iconContainer}>
+        <Image source={iconRecover} style={styles.icon} resizeMode="contain" />
         <Text style={styles.screenTitle}>Forgot Password</Text>
-        <Text style={styles.subtitle}>Enter your email address to receive a password reset link</Text>
+        <Text style={styles.subtitle}>Enter your email address to receive a 6-digit reset code</Text>
       </View>
 
       <Text style={styles.label}>Email</Text>
@@ -80,7 +74,7 @@ export default function ForgotPasswordScreen({ onBack, onSent }: Props) {
         activeOpacity={0.8}>
         {mutation.isPending
           ? <ActivityIndicator color={colors.background} />
-          : <Text style={styles.buttonText}>Send Password Reset Link</Text>}
+          : <Text style={styles.buttonText}>Send OTP Code</Text>}
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
@@ -88,17 +82,10 @@ export default function ForgotPasswordScreen({ onBack, onSent }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: spacing.lg, paddingTop: 60 },
-  back: { marginBottom: spacing.xl },
+  back: { marginBottom: spacing.lg },
   backText: { color: colors.text, fontSize: 24 },
-  logoContainer: { alignItems: 'center', marginBottom: spacing.xl },
-  iconCircle: {
-    width: 70, height: 70, borderRadius: 35, backgroundColor: '#1A3A5C',
-    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm,
-  },
-  iconText: { fontSize: 28, color: colors.primary },
-  brand: { fontSize: 22, fontWeight: '700', marginBottom: spacing.sm },
-  brandCyan: { color: colors.primary },
-  brandGreen: { color: colors.accent },
+  iconContainer: { alignItems: 'center', marginBottom: spacing.xl },
+  icon: { width: 120, height: 120, marginBottom: spacing.lg },
   screenTitle: { ...typography.h1, color: colors.text, fontWeight: '700', marginBottom: spacing.sm },
   subtitle: { ...typography.p2, color: colors.subtext, textAlign: 'center' },
   label: { ...typography.p2, color: colors.subtext, marginBottom: spacing.xs, marginTop: spacing.md },
@@ -113,12 +100,8 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { ...typography.p1, color: colors.background, fontWeight: '700' },
-  successContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  successIcon: {
-    width: 80, height: 80, borderRadius: 40, borderWidth: 3,
-    borderColor: colors.primary, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xl,
-  },
-  successIconText: { fontSize: 36, color: colors.primary },
-  successTitle: { ...typography.h1, color: colors.text, fontWeight: '700', marginBottom: spacing.md },
+  successContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
+  iconLarge: { width: 140, height: 140 },
+  successTitle: { ...typography.h1, color: colors.text, fontWeight: '700' },
   successSubtitle: { ...typography.p1, color: colors.subtext, textAlign: 'center', paddingHorizontal: spacing.xl },
 });

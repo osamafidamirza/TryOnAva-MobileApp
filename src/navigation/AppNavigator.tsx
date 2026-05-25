@@ -11,6 +11,8 @@ import StyleScreen from '../screens/onboarding/StyleScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import SignUpScreen from '../screens/auth/SignUpScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
+import SetNewPasswordScreen from '../screens/auth/SetNewPasswordScreen';
 import OTPScreen from '../screens/auth/OTPScreen';
 import HomeScreen from '../screens/main/HomeScreen';
 
@@ -19,6 +21,8 @@ type Screen =
   | 'login'
   | 'signup'
   | 'forgot'
+  | 'reset-password'
+  | 'set-password'
   | 'otp'
   | 'gender'
   | 'age'
@@ -31,6 +35,9 @@ export default function AppNavigator() {
 
   const [screen, setScreen] = useState<Screen>('splash');
   const [signupEmail, setSignupEmail] = useState('');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [selectedGender, setSelectedGender] = useState<'male' | 'female'>('male');
 
   const handleSplashFinish = async () => {
     const token = await AsyncStorage.getItem('accessToken');
@@ -76,7 +83,31 @@ export default function AppNavigator() {
       return (
         <ForgotPasswordScreen
           onBack={() => setScreen('login')}
-          onSent={() => setScreen('login')}
+          onSent={email => {
+            setForgotEmail(email);
+            setScreen('reset-password');
+          }}
+        />
+      );
+
+    case 'reset-password':
+      return (
+        <ResetPasswordScreen
+          email={forgotEmail}
+          onVerified={token => {
+            setResetToken(token);
+            setScreen('set-password');
+          }}
+          onBack={() => setScreen('forgot')}
+        />
+      );
+
+    case 'set-password':
+      return (
+        <SetNewPasswordScreen
+          resetToken={resetToken}
+          onReset={() => setScreen('login')}
+          onBack={() => setScreen('reset-password')}
         />
       );
 
@@ -94,6 +125,7 @@ export default function AppNavigator() {
         <GenderScreen
           onNext={g => {
             dispatch(setGender(g));
+            setSelectedGender(g);
             setScreen('age');
           }}
           onBack={() => setScreen('otp')}
@@ -114,6 +146,7 @@ export default function AppNavigator() {
     case 'style':
       return (
         <StyleScreen
+          gender={selectedGender}
           onGetStarted={styles => {
             dispatch(setStyles(styles));
             setScreen('home');

@@ -8,34 +8,33 @@ import { authApi } from '../../api/auth';
 import { colors, typography, spacing } from '../../theme';
 
 const iconVerification = require('../../assets/images/icon-verification.png');
-const iconEmailSent = require('../../assets/images/icon-email-sent.png');
 
 const DEV_OTP = '786786';
+const DEV_RESET_TOKEN = 'dev-reset-token';
 const { width } = Dimensions.get('window');
 const OTP_LENGTH = 6;
 
 interface Props {
-  email?: string;
-  onVerified: () => void;
+  email: string;
+  onVerified: (resetToken: string) => void;
   onBack: () => void;
 }
 
-export default function OTPScreen({ email, onVerified, onBack }: Props) {
+export default function ResetPasswordScreen({ email, onVerified, onBack }: Props) {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
-  const [verified, setVerified] = useState(false);
   const inputs = useRef<TextInput[]>([]);
 
-  const mutation = useMutation<void, Error, string>({
+  const mutation = useMutation<string, Error, string>({
     mutationFn: async (code: string) => {
-      if (code === DEV_OTP) return;
-      await authApi.verifyOtp({ email: email || '', code });
+      if (code === DEV_OTP) return DEV_RESET_TOKEN;
+      const res = await authApi.verifyResetOtp({ email, code });
+      return res.data.resetToken;
     },
-    onSuccess: () => {
-      setVerified(true);
-      setTimeout(() => onVerified(), 1000);
+    onSuccess: (resetToken) => {
+      onVerified(resetToken);
     },
-    onError: () => {
-      Alert.alert('Invalid OTP', 'Please enter the correct code');
+    onError: (err: any) => {
+      Alert.alert('Invalid Code', err.response?.data?.message || 'Please enter the correct code');
       setOtp(Array(OTP_LENGTH).fill(''));
       inputs.current[0]?.focus();
     },
@@ -59,17 +58,6 @@ export default function OTPScreen({ email, onVerified, onBack }: Props) {
     }
   };
 
-  if (verified) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.successContainer}>
-          <Image source={iconEmailSent} style={styles.iconLarge} resizeMode="contain" />
-          <Text style={styles.successTitle}>Verification Complete!</Text>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.back} onPress={onBack}>
@@ -77,9 +65,9 @@ export default function OTPScreen({ email, onVerified, onBack }: Props) {
       </TouchableOpacity>
 
       <Image source={iconVerification} style={styles.icon} resizeMode="contain" />
-      <Text style={styles.title}>OTP Verification</Text>
-      <Text style={styles.subtitle}>Enter the OTP code sent to your email</Text>
-      {email && <Text style={styles.email}>{email}</Text>}
+      <Text style={styles.title}>Verify Code</Text>
+      <Text style={styles.subtitle}>Enter the 6-digit code sent to</Text>
+      <Text style={styles.email}>{email}</Text>
 
       <View style={styles.otpRow}>
         {otp.map((digit, index) => (
@@ -104,7 +92,7 @@ export default function OTPScreen({ email, onVerified, onBack }: Props) {
         activeOpacity={0.8}>
         {mutation.isPending
           ? <ActivityIndicator color={colors.background} />
-          : <Text style={styles.buttonText}>Confirm</Text>}
+          : <Text style={styles.buttonText}>Verify Code</Text>}
       </TouchableOpacity>
     </View>
   );
@@ -119,9 +107,9 @@ const styles = StyleSheet.create({
   backText: { color: colors.text, fontSize: 24 },
   icon: { width: 120, height: 120, marginBottom: spacing.lg },
   title: { ...typography.h2, color: colors.text, fontWeight: '700', marginBottom: spacing.sm },
-  subtitle: { ...typography.p2, color: colors.subtext, textAlign: 'center', marginBottom: spacing.xs },
-  email: { ...typography.p2, color: colors.primary, marginBottom: spacing.xl },
-  otpRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.xl, marginTop: spacing.xl },
+  subtitle: { ...typography.p2, color: colors.subtext, textAlign: 'center' },
+  email: { ...typography.p2, color: colors.primary, marginTop: spacing.xs, marginBottom: spacing.xl },
+  otpRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.xl },
   otpInput: {
     width: (width - spacing.lg * 2 - spacing.sm * 5) / 6,
     height: 56, backgroundColor: colors.cardSecondary, borderRadius: 12,
@@ -135,7 +123,4 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { ...typography.p1, color: colors.background, fontWeight: '700' },
-  successContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.xl },
-  iconLarge: { width: 140, height: 140 },
-  successTitle: { ...typography.h2, color: colors.text, fontWeight: '700' },
 });

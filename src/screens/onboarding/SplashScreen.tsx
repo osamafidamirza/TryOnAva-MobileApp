@@ -5,8 +5,11 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  Image,
 } from 'react-native';
 import { colors, typography } from '../../theme';
+
+const appLogo = require('../../assets/images/app-logo.png');
 
 const { width } = Dimensions.get('window');
 
@@ -38,15 +41,7 @@ export default function SplashScreen({ onFinish }: Props) {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.logoContainer, { opacity: logoOpacity }]}>
-        {/* Outer ring */}
-        <View style={styles.outerRing}>
-          <View style={styles.innerRing}>
-            <View style={styles.iconCircle}>
-              <Text style={styles.iconText}>⊕</Text>
-            </View>
-          </View>
-        </View>
-
+        <Image source={appLogo} style={styles.logo} resizeMode="contain" />
         <Text style={styles.brand}>
           <Text style={styles.brandCyan}>Try</Text>
           <Text style={styles.brandGreen}>On</Text>
@@ -83,41 +78,14 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
   },
-  outerRing: {
+  logo: {
     width: 160,
     height: 160,
-    borderRadius: 80,
-    borderWidth: 1,
-    borderColor: '#00D4FF33',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 32,
-  },
-  innerRing: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    borderWidth: 1,
-    borderColor: '#00D4FF55',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: '#1A3A5C',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconText: {
-    fontSize: 36,
-    color: colors.primary,
+    marginBottom: 16,
   },
   brand: {
-    fontSize: 40,
+    fontSize: 36,
     fontWeight: '700',
-    letterSpacing: 1,
   },
   brandCyan: {
     color: colors.primary,
