@@ -14,7 +14,7 @@ import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import SetNewPasswordScreen from '../screens/auth/SetNewPasswordScreen';
 import OTPScreen from '../screens/auth/OTPScreen';
-import HomeScreen from '../screens/main/HomeScreen';
+import MainNavigator from './MainNavigator';
 
 type Screen =
   | 'splash'
@@ -41,7 +41,20 @@ export default function AppNavigator() {
 
   const handleSplashFinish = async () => {
     const token = await AsyncStorage.getItem('accessToken');
-    setScreen(token ? 'home' : 'login');
+    if (token) {
+      const userJson = await AsyncStorage.getItem('user');
+      if (userJson) {
+        const user = JSON.parse(userJson);
+        const tokens = {
+          access: { token },
+          refresh: { token: (await AsyncStorage.getItem('refreshToken')) ?? '' },
+        };
+        dispatch(setCredentials({ user, tokens }));
+      }
+      setScreen('home');
+    } else {
+      setScreen('login');
+    }
   };
 
   useEffect(() => {
@@ -156,7 +169,7 @@ export default function AppNavigator() {
       );
 
     case 'home':
-      return <HomeScreen onLogout={() => setScreen('login')} />;
+      return <MainNavigator onLogout={() => setScreen('login')} />;
 
     default:
       return <SplashScreen onFinish={handleSplashFinish} />;

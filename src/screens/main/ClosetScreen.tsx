@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, typography } from '../../theme';
 
-export default function HomeScreen() {
+export default function ClosetScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.emoji}>🏠</Text>
-      <Text style={styles.title}>Home</Text>
+      <Text style={styles.emoji}>👗</Text>
+      <Text style={styles.title}>My Closet</Text>
       <Text style={styles.subtitle}>Coming Soon</Text>
     </View>
   );
