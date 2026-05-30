@@ -3,14 +3,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface OnboardingState {
   gender: 'male' | 'female' | null;
   age: number | null;
-  styles: string[];
+  style: string | null;
   completed: boolean;
 }
 
 const initialState: OnboardingState = {
   gender: null,
   age: null,
-  styles: [],
+  style: null,
   completed: false,
 };
 
@@ -24,8 +24,8 @@ const onboardingSlice = createSlice({
     setAge(state, action: PayloadAction<number>) {
       state.age = action.payload;
     },
-    setStyles(state, action: PayloadAction<string[]>) {
-      state.styles = action.payload;
+    setStyle(state, action: PayloadAction<string>) {
+      state.style = action.payload;
     },
     completeOnboarding(state) {
       state.completed = true;
@@ -33,5 +33,5 @@ const onboardingSlice = createSlice({
   },
 });
 
-export const { setGender, setAge, setStyles, completeOnboarding } = onboardingSlice.actions;
+export const { setGender, setAge, setStyle, completeOnboarding } = onboardingSlice.actions;
 export default onboardingSlice.reducer;

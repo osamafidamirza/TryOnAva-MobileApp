@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Dimensions, Image, ScrollView,
+  View, Text, StyleSheet, TouchableOpacity, Dimensions, Image,
 } from 'react-native';
 import { colors, typography, spacing } from '../../theme';
 
@@ -31,18 +31,12 @@ const STYLES = [
 
 interface Props {
   gender: 'male' | 'female';
-  onGetStarted: (styles: string[]) => void;
+  onGetStarted: (style: string) => void;
   onBack: () => void;
 }
 
 export default function StyleScreen({ gender, onGetStarted, onBack }: Props) {
-  const [selected, setSelected] = useState<string[]>([]);
-
-  const toggle = (id: string) => {
-    setSelected(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id],
-    );
-  };
+  const [selected, setSelected] = useState<string | null>(null);
 
   const images = STYLE_IMAGES[gender];
 
@@ -53,16 +47,16 @@ export default function StyleScreen({ gender, onGetStarted, onBack }: Props) {
       </TouchableOpacity>
 
       <Text style={styles.title}>Choose Style</Text>
-      <Text style={styles.subtitle}>Select the styles you like to personalize your experience</Text>
+      <Text style={styles.subtitle}>Select the style you like to personalize your experience</Text>
 
       <View style={styles.grid}>
         {STYLES.map(style => {
-          const isSelected = selected.includes(style.id);
+          const isSelected = selected === style.id;
           return (
             <TouchableOpacity
               key={style.id}
               style={[styles.card, isSelected && styles.cardSelected]}
-              onPress={() => toggle(style.id)}
+              onPress={() => setSelected(style.id)}
               activeOpacity={0.8}>
               <Image source={images[style.id]} style={styles.cardImage} resizeMode="cover" />
               <Text style={styles.cardLabel}>{style.label}</Text>
@@ -77,10 +71,10 @@ export default function StyleScreen({ gender, onGetStarted, onBack }: Props) {
       </View>
 
       <TouchableOpacity
-        style={[styles.button, selected.length === 0 && styles.buttonDisabled]}
-        onPress={() => onGetStarted(selected)}
+        style={[styles.button, !selected && styles.buttonDisabled]}
+        onPress={() => selected && onGetStarted(selected)}
         activeOpacity={0.8}
-        disabled={selected.length === 0}>
+        disabled={!selected}>
         <Text style={styles.buttonText}>Get Started  →</Text>
       </TouchableOpacity>
     </View>

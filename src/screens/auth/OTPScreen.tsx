@@ -27,7 +27,6 @@ export default function OTPScreen({ email, onVerified, onBack }: Props) {
 
   const mutation = useMutation<void, Error, string>({
     mutationFn: async (code: string) => {
-      if (code === DEV_OTP) return;
       await authApi.verifyOtp({ email: email || '', code });
     },
     onSuccess: () => {

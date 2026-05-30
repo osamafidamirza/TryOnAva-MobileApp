@@ -5,6 +5,10 @@ interface User {
   name: string;
   email: string;
   role: string;
+  age?: number;
+  gender?: 'male' | 'female';
+  style?: string;
+  avatar?: string;
 }
 
 interface AuthState {
@@ -31,6 +35,11 @@ const authSlice = createSlice({
       state.refreshToken = action.payload.tokens.refresh.token;
       state.isAuthenticated = true;
     },
+    updateUser(state, action: PayloadAction<Partial<User>>) {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
     logout(state) {
       state.user = null;
       state.accessToken = null;
@@ -40,5 +49,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, logout } = authSlice.actions;
+export const { setCredentials, updateUser, logout } = authSlice.actions;
 export default authSlice.reducer;

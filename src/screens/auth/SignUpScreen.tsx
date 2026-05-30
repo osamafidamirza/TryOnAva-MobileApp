@@ -11,7 +11,7 @@ import { colors, typography, spacing } from '../../theme';
 const appLogo = require('../../assets/images/app-logo.png');
 
 interface Props {
-  onRegister: (email: string) => void;
+  onRegister: (email: string, password: string) => void;
   onLogin: () => void;
 }
 
@@ -26,7 +26,7 @@ export default function SignUpScreen({ onRegister, onLogin }: Props) {
 
   const registerMutation = useMutation({
     mutationFn: () => authApi.register({ name, email, password }),
-    onSuccess: () => onRegister(email),
+    onSuccess: () => onRegister(email, password),
     onError: (err: any) => {
       Alert.alert('Registration Failed', err.response?.data?.message || 'Something went wrong');
     },

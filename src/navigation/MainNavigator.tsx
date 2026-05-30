@@ -5,8 +5,14 @@ import HomeScreen from '../screens/main/HomeScreen';
 import ClosetScreen from '../screens/main/ClosetScreen';
 import OrdersScreen from '../screens/main/OrdersScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
+import EditProfileScreen from '../screens/main/EditProfileScreen';
+import NotificationSettingsScreen from '../screens/main/NotificationSettingsScreen';
+import PrivacyPolicyScreen from '../screens/main/PrivacyPolicyScreen';
+import TermsScreen from '../screens/main/TermsScreen';
+import EditStyleScreen from '../screens/main/EditStyleScreen';
 
 type Tab = 'home' | 'closet' | 'orders' | 'profile';
+type SubScreen = 'edit-profile' | 'notifications' | 'privacy' | 'terms' | 'edit-style';
 
 const TABS: { key: Tab; label: string; icon: string; iconActive: string }[] = [
   { key: 'home',    label: 'Home',      icon: '⌂',  iconActive: '⌂'  },
@@ -21,13 +27,37 @@ interface Props {
 
 export default function MainNavigator({ onLogout }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [subScreen, setSubScreen] = useState<SubScreen | null>(null);
+
+  const handleNavigate = (screen: SubScreen) => {
+    setSubScreen(screen);
+  };
+
+  const handleBack = () => {
+    setSubScreen(null);
+  };
+
+  if (subScreen) {
+    switch (subScreen) {
+      case 'edit-profile':
+        return <EditProfileScreen onBack={handleBack} />;
+      case 'notifications':
+        return <NotificationSettingsScreen onBack={handleBack} />;
+      case 'privacy':
+        return <PrivacyPolicyScreen onBack={handleBack} />;
+      case 'terms':
+        return <TermsScreen onBack={handleBack} />;
+      case 'edit-style':
+        return <EditStyleScreen onBack={handleBack} />;
+    }
+  }
 
   const renderScreen = () => {
     switch (activeTab) {
       case 'home':    return <HomeScreen />;
       case 'closet':  return <ClosetScreen />;
       case 'orders':  return <OrdersScreen />;
-      case 'profile': return <ProfileScreen onLogout={onLogout} />;
+      case 'profile': return <ProfileScreen onLogout={onLogout} onNavigate={handleNavigate} />;
     }
   };
 
