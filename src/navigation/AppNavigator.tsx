@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootState } from '../store';
-import { setGender, setAge, setStyles } from '../store/onboardingSlice';
-import { setCredentials } from '../store/authSlice';
+import { setGender, setAge, setStyle } from '../store/onboardingSlice';
+import { setCredentials, updateUser } from '../store/authSlice';
+import { userApi } from '../api/user';
+import { authApi } from '../api/auth';
 import SplashScreen from '../screens/onboarding/SplashScreen';
 import GenderScreen from '../screens/onboarding/GenderScreen';
 import AgeScreen from '../screens/onboarding/AgeScreen';
@@ -35,9 +37,14 @@ export default function AppNavigator() {
 
   const [screen, setScreen] = useState<Screen>('splash');
   const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
   const [forgotEmail, setForgotEmail] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [selectedGender, setSelectedGender] = useState<'male' | 'female'>('male');
+  const [selectedAge, setSelectedAge] = useState<number | null>(null);
+
+  // Stores tokens during onboarding so we don't dispatch setCredentials early
+  const pendingAuth = useRef<{ user: any; tokens: any } | null>(null);
 
   const handleSplashFinish = async () => {
     const token = await AsyncStorage.getItem('accessToken');
@@ -57,10 +64,12 @@ export default function AppNavigator() {
     }
   };
 
+  // Only redirect to home/login from auth screens — not during onboarding
   useEffect(() => {
-    if (isAuthenticated) {
+    const onboardingScreens: Screen[] = ['gender', 'age', 'style'];
+    if (isAuthenticated && !onboardingScreens.includes(screen)) {
       setScreen('home');
-    } else if (screen === 'home') {
+    } else if (!isAuthenticated && screen === 'home') {
       setScreen('login');
     }
   }, [isAuthenticated]);
@@ -84,8 +93,9 @@ export default function AppNavigator() {
     case 'signup':
       return (
         <SignUpScreen
-          onRegister={email => {
+          onRegister={(email, password) => {
             setSignupEmail(email);
+            setSignupPassword(password);
             setScreen('otp');
           }}
           onLogin={() => setScreen('login')}
@@ -128,7 +138,19 @@ export default function AppNavigator() {
       return (
         <OTPScreen
           email={signupEmail}
-          onVerified={() => setScreen('gender')}
+          onVerified={async () => {
+            try {
+              const res = await authApi.login({ email: signupEmail, password: signupPassword });
+              const { user, tokens } = res.data;
+              // Save tokens so axios interceptor has them — but DON'T dispatch
+              // setCredentials yet, or isAuthenticated=true triggers useEffect → home
+              await AsyncStorage.setItem('accessToken', tokens.access.token);
+              await AsyncStorage.setItem('refreshToken', tokens.refresh.token);
+              await AsyncStorage.setItem('user', JSON.stringify(user));
+              pendingAuth.current = { user, tokens };
+            } catch {}
+            setScreen('gender');
+          }}
           onBack={() => setScreen('signup')}
         />
       );
@@ -150,6 +172,7 @@ export default function AppNavigator() {
         <AgeScreen
           onNext={age => {
             dispatch(setAge(age));
+            setSelectedAge(age);
             setScreen('style');
           }}
           onBack={() => setScreen('gender')}
@@ -160,8 +183,27 @@ export default function AppNavigator() {
       return (
         <StyleScreen
           gender={selectedGender}
-          onGetStarted={styles => {
-            dispatch(setStyles(styles));
+          onGetStarted={async style => {
+            dispatch(setStyle(style));
+            try {
+              const res = await userApi.updateMe({
+                gender: selectedGender,
+                age: selectedAge ?? undefined,
+                style: style as 'street' | 'sports' | 'casual' | 'formal',
+              });
+              const updatedUser = res.data;
+              await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+              // Now safe to authenticate — onboarding is complete
+              const auth = pendingAuth.current;
+              if (auth) {
+                dispatch(setCredentials({ user: updatedUser, tokens: auth.tokens }));
+              }
+            } catch {
+              // Even if updateMe fails, still authenticate and go home
+              if (pendingAuth.current) {
+                dispatch(setCredentials(pendingAuth.current));
+              }
+            }
             setScreen('home');
           }}
           onBack={() => setScreen('age')}
